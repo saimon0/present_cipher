@@ -64,7 +64,6 @@ def generate_round_keys():
     for index in range(32):
         round_key = key[0:64]
         round_keys.append(''.join(round_key))
-
         key = offset_bits(key)
         key = ''.join(key)
         sbox_res = s_box.get(key[0:4])
@@ -80,6 +79,7 @@ def generate_round_keys():
         key[62] = xored_bits[2]
         key[63] = xored_bits[3]
         key[64] = xored_bits[4]
+
         round_counter += 1
 
 
@@ -182,17 +182,17 @@ def decrypt(ciphertext):
     global round_keys
     ct_arr = []
     decrypted_data = ''
-    round_keys_arr = round_keys[1:]
+    round_keys_arr = round_keys[:-1]
     while ciphertext:
         ct_arr.append(ciphertext[:64])
         ciphertext = ciphertext[64:]
     for b in ct_arr:
+        bm = add_round_key(b, round_keys[31])
         for rk in reversed(round_keys_arr):
-            b = add_round_key(b, rk)
-            b = reverse_permutation(b)
-            b = reverse_subsitution(''.join(b))
-        add_round_key(b, round_keys[0])
-        decrypted_data += str(b)
+            bm = reverse_permutation(bm)
+            bm = reverse_subsitution(''.join(bm))
+            bm = add_round_key(bm, rk)
+        decrypted_data += str(bm)
     return decrypted_data
 
 
@@ -211,9 +211,16 @@ def verify_key_length(key):
     if len(key) != 80 or not isinstance(key, int):
         print("Key must be 10 integer-digit number!")
 
-K = '00000000000000000000000000000000000000000000000000000000000000000000000000000000'
 
-plaintext = 'tajna wiadomosc zaszyfrowana szyfrem PRESENT'
+##### MAIN #####
+
+
+K = '00000000000000000000000000000000000000000000000000000000000000000000000000000000'
+#K = '11111110011111111111111111111111111100111111111111111111111111111111111111111111'
+
+plaintext = 'present cipher encryption'
+#plaintext = '0000000000000000000000000000000000000000000000000000000000000000'
+#plaintext = '1111111111111111111111111111111111111111111111111111111111111111'
 
 
 encrypted_data = encrypt()
@@ -221,9 +228,11 @@ encrypted_data = encrypt()
 print("\nKEY: " + str(K))
 print("PLAINTEXT: " + str(plaintext))
 print("\nCIPHERTEXT (BIN): " + str(encrypted_data))
+print("LEN ENCRYPTED BIN: " + str(len(encrypted_data)))
 print("CIPHERTEXT (HEX): " + hex(int(encrypted_data, 2)))
 
 decrypted_data = decrypt(encrypted_data)
 
-print("\nDECRYPTED PLAINTEXT (BIN): " + str(decrypted_data))
-print("DECRYPTED PLAINTEXT (ASCII): " + (binary_to_ascii(decrypted_data)))
+print("\nDECRYPTED CIPHERTEXT (BIN): " + str(decrypted_data))
+print("LEN DECRYPTED BIN: " + str(len(decrypted_data)))
+print("DECRYPTED CIPHERTEXT (ASCII): " + (binary_to_ascii(''.join(decrypted_data))))
